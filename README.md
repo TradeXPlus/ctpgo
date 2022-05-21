@@ -35,7 +35,7 @@
 
 ## 手动构建过程
 ### 第一步、 下载项目到本地(以/home/godev/ctpgo为例)
-    git clone https://github.com/pengzuyun/ctpgo  
+    git clone https://github.com/pengzuyun/ctpgo.git    
 
 ### 第二步、 通过swig工具，生成C++转化为C的封装和go语言项目接口文件
   这部分知识可以参考[使用swig工具为go语言与c++进行交互](https://blog.csdn.net/boshuzhang/article/details/83506370)。  
@@ -96,6 +96,13 @@
     执行程序：
     [提示符]# ./bin/ctpgo [test|dev|prod]  
     相关账户配置在src/ctpgo.go 105行。  
+
+## 自动构建过程
+  上述过程能很清晰了解本项目构建原理和具体过程，可以通过下面简单指令(在项根目录下Makefile中all目标)，一键编译构建。  
+  构建前，需要克隆项目，同时把账户密码信息填写在src/ctpgo.go文件中。
+  >$ git clone https://github.com/pengzuyun/ctpgo.git  
+  >$ cd ctpgo  
+  >$ make all   
 
 ![运行demo图](./bin/demopic.jpg)
 
