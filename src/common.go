@@ -3,9 +3,13 @@ package main
 import (
 	"fmt"
 	"github.com/axgle/mahonia"
+	"github.com/tidwall/gjson"
+	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -299,7 +303,7 @@ type InvestorPositionStruct struct {
 	MovingStopPriceDiff float64
 }
 
-// 深度行情
+// MarketDataStruct 深度行情
 type MarketDataStruct struct {
 	// 交易日
 	TradingDay string
@@ -353,7 +357,7 @@ type MarketDataStruct struct {
 	AveragePrice float64
 }
 
-// 昨日收盘数据
+// LastTimeMarketStruct 昨日收盘数据
 type LastTimeMarketStruct struct {
 	// id
 	id int
@@ -389,7 +393,7 @@ type LastTimeMarketStruct struct {
 	PriceDiff float64
 }
 
-// 输入报单
+// InputOrderStruct 输入报单
 type InputOrderStruct struct {
 	// 合约代码
 	InstrumentID string
@@ -403,7 +407,7 @@ type InputOrderStruct struct {
 	CombOffsetFlag byte
 }
 
-// 获得报单多空方向
+// GetDirectionTitle 获得报单多空方向
 func GetDirectionTitle(Direction string) string {
 	var title string
 
@@ -421,7 +425,7 @@ func GetDirectionTitle(Direction string) string {
 	return title
 }
 
-// 获得持仓多空方向
+// GetPosiDirectionTitle 获得持仓多空方向
 func GetPosiDirectionTitle(PosiDirection string) string {
 
 	title := ""
@@ -443,7 +447,7 @@ func GetPosiDirectionTitle(PosiDirection string) string {
 	return title
 }
 
-// 获得报单状态
+// GetOrderStatusTitle 获得报单状态
 func GetOrderStatusTitle(OrderStatus string) string {
 
 	title := ""
@@ -483,7 +487,7 @@ func GetOrderStatusTitle(OrderStatus string) string {
 	return title
 }
 
-// 获得开平标志
+// GetOffsetFlagTitle 获得开平标志
 func GetOffsetFlagTitle(OrderStatus string) string {
 
 	title := ""
@@ -517,7 +521,7 @@ func GetOffsetFlagTitle(OrderStatus string) string {
 	return title
 }
 
-// 获得投机套保标志
+// GetHedgeFlagTitle 获得投机套保标志
 func GetHedgeFlagTitle(HedgeFlag string) string {
 
 	title := ""
@@ -549,7 +553,7 @@ func GetHedgeFlagTitle(HedgeFlag string) string {
 	return title
 }
 
-// 获得持仓日期类型
+// GetPositionDateTitle 获得持仓日期类型
 func GetPositionDateTitle(PositionDate string) string {
 
 	title := ""
@@ -624,25 +628,11 @@ func iResultMsg(iResult int) string {
 	return msg
 }
 
-// 检查错误，有就抛出
+// CheckErr 检查错误，有就抛出
 func CheckErr(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-// 判断文件或目录是否存在
-func PathExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-
-	return false, err
 }
 
 // float64 保留几位小数点
@@ -702,17 +692,57 @@ func StrInArray(str string, arr []string) bool {
 	return false
 }
 
-// 获取当前路径
-func GetCurrentDirectory() string {
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0])) //返回绝对路径  filepath.Dir(os.Args[0])去除最后一个元素的路径
+// IsFileExist 文件是否存在
+func IsFileExist(path string) bool {
+	fi, err := os.Stat(path)
+	if err == nil || os.IsExist(err) {
+		mode := fi.Mode()
+		return mode.IsRegular()
+	}
+	return false
+}
+
+// IsDirExist 目录是否存在
+func IsDirExist(path string) bool {
+	fi, err := os.Stat(path)
+	if err == nil || os.IsExist(err) {
+		mode := fi.Mode()
+		return mode.IsDir()
+	}
+	return false
+}
+
+func GetCurrentExePath() string {
+	dir := getCurrentAbPathByExecutable()
+	tmpDir, _ := filepath.EvalSymlinks(os.TempDir())
+	if strings.Contains(dir, tmpDir) { //控制台调试方式调用，获取当前utils目录作为路径，exe路径向上一级
+		return path.Join(getCurrentAbPathByCaller(), "..")
+	}
+	return dir
+}
+
+// 获取当前执行文件绝对路径
+func getCurrentAbPathByExecutable() string {
+	exePath, err := os.Executable()
 	if err != nil {
 		log.Fatal(err)
 	}
-	return strings.Replace(dir, "\\", "/", -1) //将\替换成/
+	res, _ := filepath.EvalSymlinks(filepath.Dir(exePath))
+	return res
+}
+
+// 获取当前执行文件绝对路径（go run）
+func getCurrentAbPathByCaller() string {
+	var abPath string
+	_, filename, _, ok := runtime.Caller(0)
+	if ok {
+		abPath = path.Dir(filename)
+	}
+	return abPath
 }
 
 /**
- * 编码转换
+ *  ConvertToString 编码转换
  *
  * 例： result = ConvertToString(text, "gbk", "utf-8")
  */
@@ -727,4 +757,37 @@ func ConvertToString(text string, srcCode string, tagCode string) string {
 	result := string(cdata)
 
 	return result
+}
+
+func LoadFile(f string) string {
+	// 打开json文件
+	jsonFile, err := os.Open(f)
+
+	// 最好要处理以下错误
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// 要记得关闭
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	//fmt.Println(string(byteValue))
+	return string(byteValue)
+}
+
+func LoadJson(f string) gjson.Result {
+	var _f = path.Join(GetCurrentExePath(), f)
+	_r := gjson.Result{}
+	if IsFileExist(_f) {
+		var jsonStr = LoadFile(_f)
+		j := `{"root": ` + jsonStr + `}`
+		_v := gjson.Get(j, "root")
+		// _v, _, _, _e := jsonparser.Get(jsonStr)
+		// fmt.Println(_dt, _o)
+		if _v.Exists() {
+			return _v
+		}
+	}
+	return _r
 }

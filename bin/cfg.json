@@ -1,0 +1,32 @@
+{
+  "USERS": {
+    "test": {
+      "m_host": "tcp://180.168.146.187:10211",
+      "t_host": "tcp://180.168.146.187:10201",
+      "bid": "9999",
+      "uid": "",
+      "pwd": "",
+      "app_id": "simnow_client_test",
+      "auth_code": "0000000000000000"
+    },
+    "dev": {
+      "m_host": "tcp://180.168.146.187:10131",
+      "t_host": "tcp://180.168.146.187:10130",
+      "bid": "9999",
+      "uid": "",
+      "pwd": "",
+      "app_id": "simnow_client_test",
+      "auth_code": "0000000000000000"
+    },
+    "product": {
+      "m_host": "tcp://180.168.146.187:10211",
+      "t_host": "tcp://180.168.146.187:10201",
+      "bid": "9999",
+      "uid": "",
+      "pwd": "",
+      "app_id": "simnow_client_test",
+      "auth_code": "0000000000000000"
+    }
+  }
+
+}

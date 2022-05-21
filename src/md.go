@@ -25,7 +25,7 @@ func (p *FtdcMdSpi) OnFrontDisconnected(nReason int) {
 	log.Println("行情服务器已断线，尝试重新连接中...")
 }
 
-// 当客户端与交易后台建立起通信连接时（还未登录前），该方法被调用。
+// OnFrontConnected 当客户端与交易后台建立起通信连接时（还未登录前），该方法被调用。
 func (p *FtdcMdSpi) OnFrontConnected() {
 
 	MdStr := "=================================================================================================\n" +
@@ -63,7 +63,7 @@ func (p *FtdcMdSpi) OnRspUserLogin(pRspUserLogin ctpgo.CThostFtdcRspUserLoginFie
 	}
 }
 
-// 订阅行情
+// SubscribeMarketData 订阅行情
 func (p *FtdcMdSpi) SubscribeMarketData(InstrumentID []string) int {
 
 	if len(InstrumentID) == 0 {
@@ -90,14 +90,14 @@ func (p *FtdcMdSpi) SubscribeMarketData(InstrumentID []string) int {
 	return iResult
 }
 
-// 订阅行情应答
+// OnRspSubMarketData 订阅行情应答
 func (p *FtdcMdSpi) OnRspSubMarketData(pSpecificInstrument ctpgo.CThostFtdcSpecificInstrumentField, pRspInfo ctpgo.CThostFtdcRspInfoField, nRequestID int, bIsLast bool) {
 	if !p.IsErrorRspInfo(pRspInfo) {
 		log.Printf("订阅合约 %v 行情数据成功！\n", pSpecificInstrument.GetInstrumentID())
 	}
 }
 
-// 退订行情
+// UnSubscribeMarketData 退订行情
 func (p *FtdcMdSpi) UnSubscribeMarketData(InstrumentID []string) int {
 
 	if len(InstrumentID) == 0 {

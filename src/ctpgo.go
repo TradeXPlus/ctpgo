@@ -8,137 +8,82 @@ import (
 )
 
 var (
-	// ctp 句柄及配置项
-	Ctp CtpClient
+	Ctp CtpClient // ctp 句柄及配置项
 
-	// 行情模块函数 句柄
-	MdSpi FtdcMdSpi
+	MdSpi              FtdcMdSpi     // 行情模块函数 句柄
+	TraderSpi          FtdcTraderSpi // 交易模块函数 句柄
+	MapInstrumentInfos Map           // 交易所合约详情列表 InstrumentInfoStruct
 
-	// 交易模块函数 句柄
-	TraderSpi FtdcTraderSpi
+	MapOrderList Map // 报单列表（已成交、未成交、撤单等状态）的列表数据 OrderListStruct
 
-	// 交易所合约详情列表 InstrumentInfoStruct
-	MapInstrumentInfos Map
+	MdFront     string // ctp 服务器，及交易账号
+	TraderFront string
+	BrokerID    string
+	InvestorID  string
+	Password    string
 
-	// 报单列表（已成交、未成交、撤单等状态）的列表数据 OrderListStruct
-	MapOrderList Map
-
-	// ctp 服务器，及交易账号
-	MdFront     []string
-	TraderFront []string
-
-	BrokerID   string
-	InvestorID string
-	Password   string
-
-	// 客户端认证
-	AppID    string
+	AppID    string // AppID 客户端认证
 	AuthCode string
 
-	// ctp 流文件，绝对路径
-	StreamFile string = GetCurrentDirectory() + "/StreamFile/"
-
-	// 买卖方向：买
-	OrderBuy byte = '0'
-
-	// 买卖方向：卖
-	OrderSell byte = '1'
-
-	// 运行模式（prod 生产，test 标准环境测试，dev 24小时测试）
-	RunMode string
+	StreamFile      = GetCurrentExePath() + "/StreamFile/" // StreamFile ctp 流文件，绝对路径
+	OrderBuy   byte = '0'                                  // 买卖方向：买
+	OrderSell  byte = '1'                                  //  买卖方向：卖
 )
 
-// Ctp 行情 spi 回调函数
+// FtdcMdSpi Ctp 行情 spi 回调函数
 type FtdcMdSpi struct {
 	CtpClient
 }
 
-// Ctp 交易 spi 回调函数
+// FtdcTraderSpi Ctp 交易 spi 回调函数
 type FtdcTraderSpi struct {
 	CtpClient
 }
 
-// Ctp 客户端 行情、交易模块 全局变量
+// CtpClient Ctp 客户端 行情、交易模块 全局变量
 type CtpClient struct {
+	MdApi     ctpgo.CThostFtdcMdApi     // 行情模块 api
+	TraderApi ctpgo.CThostFtdcTraderApi // 交易模块 api
 
-	// 行情模块 api
-	MdApi ctpgo.CThostFtdcMdApi
-
-	// 交易模块 api
-	TraderApi ctpgo.CThostFtdcTraderApi
-
-	BrokerID   string
+	BrokerID   string // 期货公司代码，用户ID，密码
 	InvestorID string
 	Password   string
 
-	// 客户端认证
-	AppID    string
+	AppID    string // 客户端认证
 	AuthCode string
 
-	// 当前交易日期
-	TradingDay string
-
-	// 当前交易月份
-	TradeMonth string
-
-	// 行情请求编号
-	MdRequestId int
-
-	// 交易请求编号
-	TraderRequestId int
-
-	// 交易系统是否已经初始化了
-	IsTraderInit bool
+	TradingDay      string // 当前交易日期
+	TradeMonth      string // 当前交易月份
+	MdRequestId     int    // 行情请求编号
+	TraderRequestId int    // 交易请求编号
+	IsTraderInit    bool   // 交易系统是否已经初始化了
 
 	// 交易程序是否初始化完成（自动完成如下动作：交易账号登陆、结算单确认、查询合约、查询资金账户、查询用户报单、查询用户持仓 后算完成）
 	IsTraderInitFinish bool
-
-	// 交易程序是否已登录过
-	IsTraderLogin bool
-
-	// 行情程序是否已登录过
-	IsMdLogin bool
+	IsTraderLogin      bool // 交易程序是否已登录过
+	IsMdLogin          bool // 行情程序是否已登录过
 }
 
-// 设置交易账号
-func SetTradeAccount() {
+// SetTradeAccount 设置交易账号
+func SetTradeAccount(RunMode string) {
 
-	switch RunMode {
+	cfg := LoadJson("cfg.json")
+	ukey := "USERS." + RunMode
+	if !cfg.Get(ukey).Exists() {
+		_, err := Println("该模式未设置交易账号信息")
+		if err != nil {
 
-	// 生产环境
-	case "prod":
-		MdFront = []string{}
-		TraderFront = []string{}
-		BrokerID = ""
-		InvestorID = ""
-		Password = ""
-		AppID = ""
-		AuthCode = ""
-
-		// 测试环境 simnow (与实际生产环境保持一致)
-	case "test":
-		MdFront = []string{"tcp://180.168.146.187:10211", "tcp://218.202.237.33:10213"}
-		TraderFront = []string{"tcp://180.168.146.187:10201", "tcp://218.202.237.33:10203"}
-		BrokerID = "9999"
-		InvestorID = ""
-		Password = ""
-		AppID = "simnow_client_test"
-		AuthCode = "0000000000000000"
-
-	// 7*24 服务器，交易日，16：00～次日09：00；非交易日，16：00～次日15：00
-	case "dev":
-		MdFront = []string{"tcp://180.168.146.187:10131"}
-		TraderFront = []string{"tcp://180.168.146.187:10130"}
-		BrokerID = "9999"
-		InvestorID = ""
-		Password = ""
-		AppID = "simnow_client_test"
-		AuthCode = "0000000000000000"
-
-	default:
-		Println("该模式未设置交易账号信息")
+		}
 		os.Exit(1)
 	}
+
+	MdFront = cfg.Get(ukey + ".m_host").String()
+	TraderFront = cfg.Get(ukey + ".t_host").String()
+	BrokerID = cfg.Get(ukey + ".bid").String()
+	InvestorID = cfg.Get(ukey + ".uid").String()
+	Password = cfg.Get(ukey + ".pwd").String()
+	AppID = cfg.Get(ukey + ".app_id").String()
+	AuthCode = cfg.Get(ukey + ".auth_code").String()
 }
 
 func init() {
@@ -148,21 +93,16 @@ func init() {
 }
 
 func main() {
-
-	// 运行模式【运行程序时带上参数可设置】
-	if len(os.Args) < 2 {
-		RunMode = "test"
-	} else {
+	RunMode := "test" // 运行模式【运行程序时带上参数可设置】,需要在cfg.json中配置参数
+	if len(os.Args) >= 2 {
 		RunMode = os.Args[1]
 	}
-
-	// 设置交易账号
-	SetTradeAccount()
+	SetTradeAccount(RunMode) // 设置交易账号
 
 	log.Println("启动交易程序")
 
 	// 检查流文件目录是否存在
-	fileExists, _ := PathExists(StreamFile)
+	fileExists := IsDirExist(StreamFile)
 	if !fileExists {
 		err := os.Mkdir(StreamFile, os.ModePerm)
 		if err != nil {
@@ -187,17 +127,11 @@ func main() {
 	}
 
 	Ctp.MdApi.RegisterSpi(ctpgo.NewDirectorCThostFtdcMdSpi(&FtdcMdSpi{Ctp}))
-
-	for _, val := range MdFront {
-		Ctp.MdApi.RegisterFront(val)
-	}
+	Ctp.MdApi.RegisterFront(MdFront)
 	Ctp.MdApi.Init()
 
 	Ctp.TraderApi.RegisterSpi(ctpgo.NewDirectorCThostFtdcTraderSpi(&FtdcTraderSpi{Ctp}))
-
-	for _, val := range TraderFront {
-		Ctp.TraderApi.RegisterFront(val)
-	}
+	Ctp.TraderApi.RegisterFront(TraderFront)
 
 	Ctp.TraderApi.SubscribePublicTopic(ctpgo.THOST_TERT_QUICK)
 	Ctp.TraderApi.SubscribePrivateTopic(ctpgo.THOST_TERT_QUICK)

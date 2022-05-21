@@ -28,14 +28,20 @@
     调用过程：Go -> ctpgo.go(配合libctpgo.go) -> libctpgo.so -> libthostmduserapi_se.so 和 libthosttraderapi_se.so
   
 ## 依赖库
+  * 使用 github.com/axgle/mahonia包  
     ctp Api 默认使用 gbk 编码，需要用到开源库转换为 utf8  
-    go get -u github.com/axgle/mahonia
+  * 使用github.com/tidwall/gjson包  
+    使用json格式的配置文件，文件保存服务器，账户配置等信息  
+
 
 ------
 
 ## 手动构建过程
 ### 第一步、 下载项目到本地(以/home/godev/ctpgo为例)
     git clone https://github.com/pengzuyun/ctpgo.git    
+    cd ctpgo  
+    go get -u github.com/axgle/mahonia  
+    go get -u github.com/tidwall/gjson  
 
 ### 第二步、 通过swig工具，生成C++转化为C的封装和go语言项目接口文件
   这部分知识可以参考[使用swig工具为go语言与c++进行交互](https://blog.csdn.net/boshuzhang/article/details/83506370)。  
