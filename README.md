@@ -101,7 +101,7 @@
 
     执行程序：
     [提示符]# ./bin/ctpgo [test|dev|prod]  
-    相关账户配置在src/ctpgo.go 105行。  
+    相关账户配置在bin/cnf.json文件"USERS" -> [test|dev|prod] -> {}。  
 
 ## 自动构建过程
   上述过程能很清晰了解本项目构建原理和具体过程，可以通过下面简单指令(在项根目录下Makefile中all目标)，一键编译构建。  
