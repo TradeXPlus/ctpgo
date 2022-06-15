@@ -1,10 +1,10 @@
-# ctpgo
+# github.com/TradeXPlus/ctpgo
 [上海期货信息技术有限公司](http://www.sfit.com.cn) (由上海期货交易所投资) ctp 接口 Golang版 (for linux64)。
-可连接国内四大交易所（上期所，郑商所，大商所，能源所）
+可连接国内五大交易所（中金所，上期所，郑商所，大商所，能源中心）
 接口相关资料，可参阅官方相关说明：[期货期权api](http://www.sfit.com.cn/5_2_DocumentDown_2.htm)
 
 ## 环境要求
-  操作系统：Linux x86_64 (Centos, Red Hat, debian , ubuntu)  
+  操作系统：Linux x86_64 (Centos, Red Hat, debian , ubuntu等)  
   软件环境(将安装位置添加进PATH列表)：  
   * Go Lang (VERSION：go1.18.2）[GoLang 官网](https://go.dev) 下载[go1.18.2.linux-amd64.tar.gz](https://go.dev/dl/go1.18.2.linux-amd64.tar.gz) ，并安装;
   * CMake (VERSION: 3.20) [CMake 官网](https://cmake.org/) 下载[cmake-3.23.1-linux-x86_64.tar.gz](https://github.com/Kitware/CMake/releases/download/v3.23.1/cmake-3.23.1-linux-x86_64.tar.gz) 并安装；
@@ -19,13 +19,13 @@
   以上操作能正常显示各自版本，代表安装成功！  
 
 ## 实现原理
-  > 第一步、 通过使用swig工具为go语言与c++（ctp 接口库和头文件是C++）进行交互，生成ctpgo_wrap.cxx、ctpgo_wrap.h、ctpgo.go文件；  
+  > 第一步、 通过使用swig工具为go语言与c++（ctp 接口库和头文件是C++）进行交互，生成ctpgo_wrap.cxx、ctpgo_wrap.h、lib.go文件；  
 
-  > 第二步、 使用Cmake,将ctpgo_wrap.cxx ctpgo_wrap.h编译成 libctpgo.so文件，此文件是ctpgo.go调用CTP API的桥梁文件；  
+  > 第二步、 使用Cmake,将ctpgo_wrap.cxx ctpgo_wrap.h编译成 libctpgo.so文件，此文件是lib.go,libctpgo.go调用CTP API的桥梁文件；  
 
-  > 第三步、 编写Go语言程序，调用 ctpgo.go 中相关接口属性，实现调用 ctp 接口库的目的。  
+  > 第三步、 编写Go语言程序，调用 lib.go 中相关接口属性，实现调用 ctp 接口库的目的。  
 
-    调用过程：Go -> ctpgo.go(配合libctpgo.go) -> libctpgo.so -> libthostmduserapi_se.so 和 libthosttraderapi_se.so
+    调用过程：Go -> lib.go(配合libctpgo.go) -> libctpgo.so -> libthostmduserapi_se.so 和 libthosttraderapi_se.so
   
 ## 依赖库
   * 使用 github.com/axgle/mahonia包  
@@ -38,7 +38,7 @@
 
 ## 手动构建过程
 ### 第一步、 下载项目到本地(以/home/godev/ctpgo为例)
-    git clone https://github.com/pengzuyun/ctpgo.git    
+    git clone https://github.com/TradeXPlus/ctpgo.git    
     cd ctpgo  
     go get -u github.com/axgle/mahonia  
     go get -u github.com/tidwall/gjson  
@@ -69,10 +69,10 @@
  
   > [提示符]# make swig  
   > 该命令调用cmake目录下 Makefile 的 swig部分，并执行(执行会报Warning 514，是因为没有构造函数的原因，不用管他)；  
-  > 执行完毕，系统将生成（/home/godev/ctpgo）如下三个文件：  
-  > ctpgo.go  
-  > lib/linux64/ctpgo_wrap.cxx  
-  > lib/linux64/ctpgo_wrap.h  
+  > 执行完毕，系统将生成（/home/godev/ctpgo/lib）如下三个文件：  
+  > lib.go  
+  > linux64/ctpgo_wrap.cxx  
+  > linux64/ctpgo_wrap.h  
 
   **这些文件 会在第三步 cmake 生成 so文件中用到**
 
@@ -90,7 +90,7 @@
 >> ......  
 > [提示符]# mv libctpgo.so ../linux64/libctpgo.so
 
-执行完上述命令，将在lib目录生成 libctpgo.so，该文件可以被Go语言通过cgo模式调用。
+执行完上述命令，将在lib/linux64/目录生成 libctpgo.so，该文件可以被Go语言通过cgo模式调用。
 
 ### 第四步、 编译Go源程序，生成可执行程序
     执行如下命令进行构建(这个编译过程非常漫长，请耐心等待)：  
@@ -106,15 +106,15 @@
 ## 自动构建过程
   上述过程能很清晰了解本项目构建原理和具体过程，可以通过下面简单指令(在项根目录下Makefile中all目标)，一键编译构建。  
   构建前，需要克隆项目，同时把账户密码信息填写在src/ctpgo.go文件中。
-  >$ git clone https://github.com/pengzuyun/ctpgo.git  
+  >$ git clone https://github.com/TradeXPlus/ctpgo.git  
   >$ cd ctpgo  
   >$ make all   
 
 ![运行demo图](./bin/demopic.jpg)
 
-**感谢：[goctp](github.com/mayiweb/goctp) 项目提供的参考**
-
+**感谢：[goctp](https://github.com/mayiweb/goctp)、[go-talib](https://github.com/markcheno/go-talib) 项目提供的参考**
 
 ## 量化交易程序定制开发和国内期货开户业务
 
-    低佣金开户，资金量大可做到交易所+1分的交易手续费，开户及程序咨询请添加XV：vip-1fen
+    低佣金开户，资金量大可做到交易所+1分的交易手续费，开户及程序咨询请添加WX：vip-1fen
+    交流QQ群：777501115（入群密码：投机普拉斯）

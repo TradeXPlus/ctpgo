@@ -1,5 +1,21 @@
 {
+  "STRATEGYS":{
+    "default": "SuperDoubleEMA",
+    "SuperDoubleEMA": {
+      "symbol": ["FG209"],
+      "max_klen": 1500,
+      "period": 300,
+      "params": [12, 144]
+    },
+    "StrategyEMA": {
+      "symbol": ["FG209"],
+      "max_klen": 1500,
+      "period": 60,
+      "params": []
+    }
+  },
   "USERS": {
+    "default": "dev",
     "test": {
       "m_host": "tcp://180.168.146.187:10211",
       "t_host": "tcp://180.168.146.187:10201",
